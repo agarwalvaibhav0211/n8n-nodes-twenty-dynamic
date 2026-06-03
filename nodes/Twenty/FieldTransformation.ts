@@ -173,18 +173,31 @@ export function transformFieldsData(fields: IFieldData[], resource?: string): Re
 				}
 				break;
 
-			case 'richText':
+			case 'richText': {
 				// RichText fields — Twenty accepts { markdown: "..." }
-				if (field.markdown !== undefined && field.markdown !== '') {
-					result[actualFieldName] = { markdown: field.markdown };
+				const mdValue = field.markdown ?? field.fieldValue;
+				if (mdValue !== undefined && mdValue !== '') {
+					// If already an object (e.g. { markdown: "..." }), pass through
+					if (typeof mdValue === 'object' && mdValue !== null) {
+						result[actualFieldName] = mdValue;
+					} else {
+						result[actualFieldName] = { markdown: String(mdValue) };
+					}
 				}
 				break;
+			}
 
 			case 'simple':
 			default:
 				// Simple fields - use fieldValue directly
 				if (field.fieldValue !== undefined && field.fieldValue !== '') {
-					result[actualFieldName] = field.fieldValue;
+					// bodyV2 is a RICH_TEXT field — wrap plain strings in { markdown: ... }
+					// This handles workflows built before the richText type was added
+					if (actualFieldName === 'bodyV2' && typeof field.fieldValue === 'string') {
+						result[actualFieldName] = { markdown: field.fieldValue };
+					} else {
+						result[actualFieldName] = field.fieldValue;
+					}
 				}
 				break;
 		}
