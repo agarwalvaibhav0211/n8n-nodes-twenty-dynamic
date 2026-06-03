@@ -225,6 +225,22 @@ export const phonesFields: INodeProperties[] = [
 ];
 
 /**
+ * RichText field parameters
+ * Used for: bodyV2 (Note), and any other RICH_TEXT fields
+ */
+export const richTextFields: INodeProperties[] = [
+	{
+		displayName: 'Markdown',
+		name: 'markdown',
+		type: 'string',
+		typeOptions: { rows: 4 },
+		default: '',
+		description: 'Content in Markdown format',
+		placeholder: '## Heading\n\nYour content here...',
+	},
+];
+
+/**
  * Get all complex field parameter definitions
  * @returns Array of all complex field parameters
  */
@@ -236,6 +252,7 @@ export function getAllComplexFieldParameters(): INodeProperties[] {
 		...addressFields,
 		...emailsFields,
 		...phonesFields,
+		...richTextFields,
 	];
 }
 

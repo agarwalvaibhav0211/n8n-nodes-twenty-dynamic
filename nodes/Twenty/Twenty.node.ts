@@ -906,6 +906,21 @@ export class Twenty implements INodeType {
                                 default: [],
                                 description: 'Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>.',
                             },
+                            // Rich Text field (e.g. bodyV2 on Note)
+                            {
+                                displayName: 'Markdown',
+                                name: 'markdown',
+                                type: 'string',
+                                typeOptions: { rows: 4 },
+                                displayOptions: {
+                                    show: {
+                                        fieldType: ['richText'],
+                                    },
+                                },
+                                default: '',
+                                description: 'Content in Markdown format',
+                                placeholder: '## Heading\n\nYour content here...',
+                            },
                         ],
                     },
                 ],
@@ -1123,18 +1138,27 @@ export class Twenty implements INodeType {
                     // Convert map to array
                     const allFields = Array.from(fieldMap.values());
 
+                    // Field types that are never useful in the n8n field picker
+                    const EXCLUDED_FIELD_TYPES = new Set([
+                        'RELATION', 'MORPH_RELATION',  // relations — linked records, not set as plain fields
+                        'ACTOR',                        // system composite (createdBy/updatedBy), read-only
+                        'TS_VECTOR',                    // full-text search index, computed
+                        'POSITION',                     // internal ordering, managed by Twenty
+                        'FILES',                        // file upload, not supported via API
+                    ]);
+
                     // Filter fields based on operation and active status
                     const isCreateOrUpdate = operation === 'create' || operation === 'update';
                     const filteredFields = allFields.filter((field) => {
-                        // Always exclude deactivated fields (isActive: false)
-                        if (field.isActive === false) {
-                            return false;
-                        }
+                        // Always exclude deactivated fields
+                        if (field.isActive === false) return false;
+                        // Always exclude relation/system-computed types
+                        if (EXCLUDED_FIELD_TYPES.has(field.type)) return false;
+                        // Always exclude Connection fields from GraphQL introspection
+                        if (field.type?.endsWith('Connection')) return false;
                         // For Create/Update, only show writable fields
-                        if (isCreateOrUpdate) {
-                            return field.isWritable;
-                        }
-                        // For Get/List/Delete, show all active fields
+                        if (isCreateOrUpdate) return field.isWritable;
+                        // For Get/List/Delete, show all active non-excluded fields
                         return true;
                     });
 
@@ -1143,12 +1167,19 @@ export class Twenty implements INodeType {
                         const typeMap: Record<string, string> = {
                             'SELECT': 'select',
                             'MULTI_SELECT': 'multiSelect',
+                            // Metadata API type names (uppercase)
+                            'FULL_NAME': 'fullName',
+                            'LINKS': 'link',
+                            'CURRENCY': 'currency',
+                            'ADDRESS': 'address',
+                            // GraphQL type names (PascalCase) — from introspection
                             'FullName': 'fullName',
                             'Links': 'link',
                             'Currency': 'currency',
                             'Address': 'address',
                             'EMAILS': 'emails',
                             'PHONES': 'phones',
+                            'RICH_TEXT': 'richText',
                             'BOOLEAN': 'boolean',
                             'TEXT': 'simple',
                             'NUMBER': 'simple',
@@ -1157,6 +1188,12 @@ export class Twenty implements INodeType {
                             'UUID': 'simple',
                             'RAW_JSON': 'simple',
                             'RELATION': 'relation',
+                            'MORPH_RELATION': 'relation',
+                            // System/read-only types — excluded from field picker elsewhere, map as simple fallback
+                            'ACTOR': 'simple',
+                            'POSITION': 'simple',
+                            'TS_VECTOR': 'simple',
+                            'FILES': 'simple',
                         };
                         return typeMap[twentyType] || 'simple';
                     };

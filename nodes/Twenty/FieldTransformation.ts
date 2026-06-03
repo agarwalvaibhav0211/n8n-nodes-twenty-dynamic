@@ -42,6 +42,8 @@ export interface IFieldData {
 	fieldMultiSelectValue?: string[];
 	// Boolean field
 	fieldBooleanValue?: boolean;
+	// RichText fields
+	markdown?: string;
 }
 
 /**
@@ -168,6 +170,13 @@ export function transformFieldsData(fields: IFieldData[], resource?: string): Re
 				// Boolean fields - true/false value
 				if (field.fieldBooleanValue !== undefined) {
 					result[actualFieldName] = field.fieldBooleanValue;
+				}
+				break;
+
+			case 'richText':
+				// RichText fields — Twenty accepts { markdown: "..." }
+				if (field.markdown !== undefined && field.markdown !== '') {
+					result[actualFieldName] = { markdown: field.markdown };
 				}
 				break;
 

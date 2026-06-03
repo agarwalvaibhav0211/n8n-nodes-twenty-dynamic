@@ -51,6 +51,8 @@ const COMPLEX_TYPE_SUBFIELDS: Record<string, string> = {
 		primaryPhoneCountryCode
 		primaryPhoneCallingCode
 		additionalPhones`,
+	'RichText': `markdown
+		blocknote`,
 };
 
 /**
