@@ -306,12 +306,18 @@ export async function getSchemaMetadata(
 
 				// For RELATION and MORPH_RELATION fields that have a joinColumnName,
 				// synthesize a writable UUID field for the FK column (e.g. companyId, noteId)
+				// Exclude the original relation field from the picker — only the FK UUID is useful
 				const joinColumnName = f.settings?.joinColumnName;
 				if ((f.type === 'RELATION' || f.type === 'MORPH_RELATION') && joinColumnName) {
-					return [base, {
+					// Convert camelCase joinColumnName to a readable label (e.g. targetCompanyId → Target Company Id)
+					const fkLabel = joinColumnName
+						.replace(/([A-Z])/g, ' $1')
+						.replace(/^./, (s: string) => s.toUpperCase())
+						.trim();
+					return [{
 						id: `${f.id}_fk`,
 						name: joinColumnName,
-						label: joinColumnName,
+						label: fkLabel,
 						type: 'UUID',
 						isNullable: true,
 						isWritable: true,
