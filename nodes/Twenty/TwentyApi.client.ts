@@ -618,10 +618,22 @@ export async function getDataSchemaForObject(
 			const isNullable = field.type.kind !== 'NON_NULL';
 			const isWritable = !isReadOnlyField(field.name);
 
-			// Determine if this is a relation field (ends with 'Connection' or is a known relation type)
+			// Known non-relation GraphQL OBJECT types (complex scalar fields)
+			const KNOWN_COMPLEX_TYPES = new Set([
+				'FullName', 'Links', 'Currency', 'Address', 'Emails', 'Phones', 'RichText',
+				'Actor', 'WorkspaceMember',
+			]);
+			// Unwrap the actual GraphQL kind to detect OBJECT types
+			let unwrappedKind = field.type.kind;
+			let unwrappedType = field.type;
+			while (unwrappedKind === 'NON_NULL' || unwrappedKind === 'LIST') {
+				unwrappedType = unwrappedType.ofType;
+				unwrappedKind = unwrappedType?.kind;
+			}
+			const isGraphQLObject = unwrappedKind === 'OBJECT' || unwrappedKind === 'INTERFACE';
+			// Determine if this is a relation field
 			const isRelation = fieldType.includes('Connection') ||
-				fieldType === 'WorkspaceMember' ||
-				fieldType === 'Actor';
+				(isGraphQLObject && !KNOWN_COMPLEX_TYPES.has(unwrappedType?.name));
 
 			return {
 				id: field.name, // Use field name as ID since we don't have a UUID from introspection
