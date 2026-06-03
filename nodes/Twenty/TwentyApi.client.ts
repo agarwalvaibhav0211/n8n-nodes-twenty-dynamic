@@ -262,6 +262,7 @@ export async function getSchemaMetadata(
 									isActive
 									isSystem
 									options
+									settings
 								}
 							}
 						}
@@ -288,24 +289,41 @@ export async function getSchemaMetadata(
 			isRemote: node.isRemote,
 			isUIReadOnly: node.isUIReadOnly,
 			isSearchable: node.isSearchable,
-			fields: node.fields.edges.map((fieldEdge: any) => ({
-				id: fieldEdge.node.id,
-				name: fieldEdge.node.name,
-				label: fieldEdge.node.label,
-				type: fieldEdge.node.type,
-				isNullable: fieldEdge.node.isNullable,
-				// isWritable is the inverse of isUIReadOnly
-				// If isUIReadOnly is true, field is NOT writable
-				// If isUIReadOnly is false/null/undefined, field IS writable
-				isWritable: fieldEdge.node.isUIReadOnly !== true,
-				// Additional field metadata for debugging
-				isActive: fieldEdge.node.isActive,
-				isSystem: fieldEdge.node.isSystem,
-				// Options for SELECT and MULTI_SELECT fields
-				options: fieldEdge.node.options || undefined,
-				// relationMetadata not available in current API, set to null
-				relationMetadata: null,
-			})),
+			fields: node.fields.edges.flatMap((fieldEdge: any) => {
+				const f = fieldEdge.node;
+				const base = {
+					id: f.id,
+					name: f.name,
+					label: f.label,
+					type: f.type,
+					isNullable: f.isNullable,
+					isWritable: f.isUIReadOnly !== true,
+					isActive: f.isActive,
+					isSystem: f.isSystem,
+					options: f.options || undefined,
+					relationMetadata: null,
+				};
+
+				// For RELATION and MORPH_RELATION fields that have a joinColumnName,
+				// synthesize a writable UUID field for the FK column (e.g. companyId, noteId)
+				const joinColumnName = f.settings?.joinColumnName;
+				if ((f.type === 'RELATION' || f.type === 'MORPH_RELATION') && joinColumnName) {
+					return [base, {
+						id: `${f.id}_fk`,
+						name: joinColumnName,
+						label: joinColumnName,
+						type: 'UUID',
+						isNullable: true,
+						isWritable: true,
+						isActive: true,
+						isSystem: false,
+						options: undefined,
+						relationMetadata: null,
+					}];
+				}
+
+				return [base];
+			}),
 		};
 	});
 
