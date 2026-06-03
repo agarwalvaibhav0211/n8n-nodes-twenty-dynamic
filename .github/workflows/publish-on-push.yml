@@ -1,4 +1,4 @@
-name: Release and Publish on Push
+name: Release on Push
 
 on:
   push:
@@ -6,11 +6,10 @@ on:
       - master
 
 jobs:
-  release-and-publish:
+  release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      id-token: write
 
     steps:
       - uses: actions/checkout@v4
@@ -22,7 +21,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-          registry-url: https://registry.npmjs.org
           cache: pnpm
 
       - name: Install dependencies
@@ -44,9 +42,6 @@ jobs:
           git add package.json
           git commit -m "chore: bump version to ${{ steps.version.outputs.version }} [skip ci]"
           git push
-
-      - name: Publish to npm
-        run: pnpm publish --access public --no-git-checks --provenance
 
       - name: Create GitHub Release
         env:
