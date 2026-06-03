@@ -15,12 +15,14 @@ export class TwentyApi implements ICredentialType {
 			type: 'string',
 			typeOptions: { password: true },
 			default: '',
+			hint: 'Generate in Settings → API & Webhooks. Keys can be scoped to a role under Settings → Members → Roles → Assignment tab.',
 		},
 		{
 			displayName: 'Domain',
 			name: 'domain',
 			type: 'string',
 			default: '',
+			hint: 'Your Twenty CRM base URL, e.g. https://yourworkspace.twenty.com',
 		},
 		{
 			displayName: 'Schema Cache',

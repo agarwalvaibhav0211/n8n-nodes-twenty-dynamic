@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "twenty": {
+      "type": "streamable-http",
+      "url": "https://twenty.oracle.makemybazar.com/mcp"
+    }
+  }
+}

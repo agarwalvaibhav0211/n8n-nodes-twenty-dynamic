@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-06-03
+
+### 🚀 Twenty v2.8.3 Compatibility
+
+**Cursor-based pagination** — Twenty's REST API (v2.x) uses cursor pagination with a hard cap of 60 records per page. The List/Search operation now loops through pages using `starting_after` + `pageInfo.endCursor` until all requested records are fetched. Previously, requests for more than 60 records would silently return only the first 60.
+
+**Deprecated object filtering** — `messageChannel`, `messageFolder`, and `calendarChannel` were deprecated in Twenty v2.8 and are now hidden from the Database dropdown to avoid confusion.
+
+**Credential hints** — API Key and Domain fields now show inline hints: how to generate a key, how to scope it to a role, and the expected domain format.
+
+**Version docs** — README and package version updated to reflect Twenty v2.8.3 compatibility.
+
+---
+
 ## [0.9.32] - 2025-10-15
 
 ### 🐛 Bug Fix - Expression Validation for Link Fields

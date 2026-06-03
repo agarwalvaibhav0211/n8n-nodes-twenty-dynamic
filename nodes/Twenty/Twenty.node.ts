@@ -19,6 +19,7 @@ import {
     queryEnumValues,
     IFieldMetadata,
     getCleanFieldLabel,
+    TWENTY_REST_MAX_PAGE_SIZE,
 } from './TwentyApi.client';
 import { transformFieldsData, IFieldData } from './FieldTransformation';
 import { 
@@ -1960,53 +1961,72 @@ export class Twenty implements INodeType {
                     // Use REST API for List/Search operation - returns all fields automatically
                     const pluralName = objectMetadata.namePlural;
 
-                    // Build query parameters for REST API
-                    const queryParts: string[] = [];
-                    if (limit) {
-                        queryParts.push(`limit=${limit}`);
-                    }
+                    // Build static query parts (filter, order) — cursor/limit are added per page
+                    const staticParts: string[] = [];
                     if (searchQuery) {
                         // Use smart filter builder to auto-detect plain text vs advanced syntax
                         const filter = buildSmartFilter(searchQuery, resource);
                         // URL-encode the filter value - Twenty REST API requires encoded filter params
                         // Without encoding, % wildcards in ilike get interpreted as URL percent-encoding
-                        queryParts.push(`filter=${encodeURIComponent(filter)}`);
+                        staticParts.push(`filter=${encodeURIComponent(filter)}`);
                     }
                     if (orderByField) {
-                        queryParts.push(`order_by=${orderByField}[${orderByDirection}]`);
+                        staticParts.push(`order_by=${orderByField}[${orderByDirection}]`);
                     }
 
-                    const restPath = `/${pluralName}${queryParts.length > 0 ? '?' + queryParts.join('&') : ''}`;
-                    
+                    // Cursor-paginate through results — REST API caps at TWENTY_REST_MAX_PAGE_SIZE per page
+                    let collected = 0;
+                    let cursor: string | undefined;
+                    let hasNextPage = true;
+
                     try {
-                        const response: any = await twentyRestApiRequest.call(
-                            this,
-                            'GET',
-                            restPath,
-                        );
+                        while (hasNextPage && (!limit || collected < limit)) {
+                            const remaining = limit ? limit - collected : TWENTY_REST_MAX_PAGE_SIZE;
+                            const pageSize = Math.min(remaining, TWENTY_REST_MAX_PAGE_SIZE);
 
-                        // REST API returns data in format: { data: { [resourcePlural]: [...records] } }
-                        const records = response.data?.[pluralName];
-                        
-                        if (!records) {
-                            // No records found - return empty array
-                            continue;
-                        }
+                            const queryParts = [...staticParts, `limit=${pageSize}`];
+                            if (cursor) {
+                                queryParts.push(`starting_after=${encodeURIComponent(cursor)}`);
+                            }
 
-                        // Handle both array response and paginated response
-                        const recordsArray = Array.isArray(records) ? records : records.edges?.map((edge: any) => edge.node) || [];
+                            const restPath = `/${pluralName}?${queryParts.join('&')}`;
 
-                        // Transform each record to workflow record
-                        for (const record of recordsArray) {
-                            returnData.push({
-                                json: record,
-                                pairedItem: { item: i },
-                            });
+                            const response: any = await twentyRestApiRequest.call(
+                                this,
+                                'GET',
+                                restPath,
+                            );
+
+                            // REST API returns: { data: { [pluralName]: [...], pageInfo: { hasNextPage, endCursor } } }
+                            const data = response.data;
+                            if (!data) break;
+
+                            const records = data[pluralName];
+                            if (!records) break;
+
+                            // Handle both flat array and edges/node format
+                            const recordsArray: any[] = Array.isArray(records)
+                                ? records
+                                : records.edges?.map((edge: any) => edge.node) ?? [];
+
+                            for (const record of recordsArray) {
+                                returnData.push({
+                                    json: record,
+                                    pairedItem: { item: i },
+                                });
+                                collected++;
+                            }
+
+                            // Follow cursor for next page
+                            const pageInfo = data.pageInfo ?? records.pageInfo;
+                            hasNextPage = pageInfo?.hasNextPage === true;
+                            cursor = pageInfo?.endCursor;
+
+                            // Stop if no cursor returned or no records on this page
+                            if (!cursor || recordsArray.length === 0) break;
                         }
                     } catch (error) {
-                        // If REST API fails, provide helpful error message
-                        if (error.message.includes('not found')) {
-                            // Empty result - continue
+                        if (error.message?.includes('not found')) {
                             continue;
                         }
                         throw error;

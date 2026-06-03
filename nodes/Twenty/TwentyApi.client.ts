@@ -3,6 +3,12 @@ import { IExecuteFunctions, ILoadOptionsFunctions, NodeApiError } from 'n8n-work
 // Define a union type for the 'this' context, as the function can be called from both execute and loadOptions
 type TwentyApiContext = IExecuteFunctions | ILoadOptionsFunctions;
 
+// Twenty REST API caps page size at 60 (v2.x)
+export const TWENTY_REST_MAX_PAGE_SIZE = 60;
+
+// Objects deprecated in Twenty v2.8 — hide from dropdown to avoid confusion
+const DEPRECATED_OBJECTS = ['messageChannel', 'messageFolder', 'calendarChannel'];
+
 /**
  * Schema metadata interfaces
  */
@@ -303,7 +309,8 @@ export async function getSchemaMetadata(
 		};
 	});
 
-	return objects;
+	// Filter out objects deprecated in Twenty v2.8
+	return objects.filter((obj: IObjectMetadata) => !DEPRECATED_OBJECTS.includes(obj.nameSingular));
 }
 
 /**

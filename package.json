@@ -1,6 +1,6 @@
 {
-  "name": "n8n-nodes-twenty-dynamic",
-  "version": "2.1.1",
+  "name": "@kalkijs/n8n-nodes-twenty",
+  "version": "2.2.0",
   "description": "Advanced GraphQL n8n node for Twenty CRM with custom database, field support, and resource locators. Complete CRUD support for custom and default databases",
   "keywords": [
     "n8n-community-node-package",
@@ -31,17 +31,9 @@
     "open-source-crm"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/Logrui/n8n-nodes-twenty-dynamic",
   "author": {
-    "name": "Logrui",
-    "email": "yhcsanction@gmail.com"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Logrui/n8n-nodes-twenty-dynamic"
-  },
-  "bugs": {
-    "url": "https://github.com/Logrui/n8n-nodes-twenty-dynamic/issues"
+    "name": "Vaibhav Agarwal",
+    "email": "agarwalvaibhav0211@gmail.com"
   },
   "engines": {
     "node": ">=18.10",

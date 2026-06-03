@@ -60,7 +60,7 @@ Unlike older Twenty CRM nodes, this node **dynamically adapts** to your Twenty i
 3. Enter package name: `n8n-nodes-twenty-dynamic`
 
 ### Requirements (In GEneral Works for Most N8N and Twenty CRM Self Hosted Instances)
-- **Twenty CRM**: v1.4.0 or later - Supports Twenty CRM v1.11.0 (Newest Version as of 2025-12-15)
+- **Twenty CRM**: v1.4.0 or later - Tested up to Twenty CRM v2.8.3 (Updated: 2026-06-03)
 - **n8n**: v1.0.0 or later (Recommended) - Supports n8n 2.0 Beta (Newest Version as of 2025-12-15)
 
 ---
@@ -265,7 +265,7 @@ Please report bugs and request features on [GitHub Issues](https://github.com/Lo
 
 ## Compatibility
 
-Compatible and tested with the newest Twenty v1.11.0 and n8n Version 2.0 Beta (Last Updated: 2025-12-15)
+Compatible and tested with Twenty CRM v2.8.3 and n8n Version 2.0 Beta (Last Updated: 2026-06-03)
 
 
 ## Credits
